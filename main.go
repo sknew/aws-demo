@@ -46,10 +46,12 @@ func InitPairs() {
 	pairs = append(pairs, NewPair("User2", "keyFour", "valueFour"))
 	log.Printf("%+v\n", pairs)
 
-	// Create the real ones in SimpleDB
-	for _, item := range pairs {
-		PutPairSimpleDB(item.User, item.Key, item.Value, item.Time.String(), item.Server, nil)
-	}
+	/*
+		// Create the real ones in SimpleDB
+		for _, item := range pairs {
+			PutPairSimpleDB(item.User, item.Key, item.Value, item.Time.String(), item.Server, nil)
+		}
+	*/
 
 	/*
 		// Try it out
@@ -206,6 +208,10 @@ func EchoParseRequest(w http.ResponseWriter, r *http.Request) Pair {
 	return body
 }
 
+func HandlePing(w http.ResponseWriter, r *http.Request) {
+	json.NewEncoder(w).Encode(serverName)
+}
+
 ////
 type UserHttpHandlerFunc func(username string, w http.ResponseWriter, r *http.Request)
 
@@ -255,10 +261,11 @@ func main() {
 
 	router := mux.NewRouter()
 
+	router.HandleFunc("/", Logger(HandlePing)).Methods("GET")
 	router.HandleFunc("/pairs", Logger(Authenticate(GetPairs))).Methods("GET")
 	router.HandleFunc("/pair/{key}", Logger(Authenticate(GetPair))).Methods("GET")
 	router.HandleFunc("/pair/{key}", Logger(Authenticate(AddUpdatePair))).Methods("POST")
 	router.HandleFunc("/pair/{key}", Logger(Authenticate(DeletePair))).Methods("DELETE")
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe("0.0.0.0:8080", router))
 }
